@@ -1,14 +1,64 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
-namespace CompressionTester
+namespace zCompressionWorker
 {
-    public static class FileHelper
+    public class FileService
     {
-        public static bool FileCompare(string file1, string file2)
+        private readonly ILogger<FileService> _logger;
+        private RunConfig _config;
+        private const string ZIP_EXTENSION = ".gz";
+
+        public FileService(ILogger<FileService> logger,
+            RunConfig config)
+        {
+            _logger = logger;
+            _config = config;
+
+            _logger.LogInformation($"SourceFilesPath: {_config.SourceFilesPath}");
+        }
+
+        public IEnumerable<string> ListFiles(string path, string filter = "*.*")
+        {
+            return Directory.GetFiles(path, filter, SearchOption.AllDirectories);
+        }
+
+        public void ResetFolder(string path)
+        {
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            foreach (var file in ListFiles(path))
+            {
+                File.Delete(file);
+            }
+        }
+
+        public string GetDestinationZipFileName(string file, string sourcePath, string destPath)
+        {
+            return file.Replace(sourcePath, destPath) + ZIP_EXTENSION;
+        }
+
+        public string GetDestinationUnZipFileName(string file, string compressedPath, string decompressedPath)
+        {
+            file = file.Replace(compressedPath, decompressedPath);
+
+            if (file.EndsWith(ZIP_EXTENSION))
+                file = file.Substring(0, file.Length - ZIP_EXTENSION.Length);
+
+            return file;
+        }
+
+        public long DirectorySize(string path)
+        {
+            return Directory.GetFiles(path).Select(x => new FileInfo(x)).Sum(x => x.Length);
+        }
+
+        public bool FileCompare(string file1, string file2)
         {
             int file1byte;
             int file2byte;
@@ -58,4 +108,5 @@ namespace CompressionTester
             return ((file1byte - file2byte) == 0);
         }
     }
+
 }
