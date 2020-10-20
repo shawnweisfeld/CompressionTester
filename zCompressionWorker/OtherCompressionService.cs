@@ -10,13 +10,13 @@ using System.Threading.Tasks;
 
 namespace zCompressionWorker
 {
-    public class DotNetCompressionService
+    public class OtherCompressionService
     {
         private TelemetryClient _telemetryClient;
-        private readonly ILogger<DotNetCompressionService> _logger;
+        private readonly ILogger<OtherCompressionService> _logger;
         private RunConfig _config;
 
-        public DotNetCompressionService(ILogger<DotNetCompressionService> logger,
+        public OtherCompressionService(ILogger<OtherCompressionService> logger,
             TelemetryClient telemetryClient,
             RunConfig config)
         {
@@ -27,17 +27,15 @@ namespace zCompressionWorker
 
         public async Task CompressAsync(string source, string destination)
         {
-            using (var dt = _telemetryClient.StartOperation<DependencyTelemetry>("DotNetCompression"))
+            using (var dt = _telemetryClient.StartOperation<DependencyTelemetry>("OtherCompression"))
             using (var pm = new PerfMon())
-            using (FileStream sourceFileStream = File.OpenRead(source))
-            using (FileStream destFileStream = File.Create(destination))
-            using (GZipStream compressionStream = new GZipStream(destFileStream, CompressionMode.Compress))
             {
-                await sourceFileStream.CopyToAsync(compressionStream);
+                //TODO: Replace this line of code with the call to your compression SDK
+                await Task.Run(() => File.Copy(source, destination));
 
                 pm.Stop();
 
-                dt.Telemetry.Type = "DotNetCompression";
+                dt.Telemetry.Type = "OtherCompression";
                 dt.Telemetry.Properties.Add("source", source);
                 dt.Telemetry.Properties.Add("destination", destination);
                 dt.Telemetry.Properties.Add("run", _config.RunID);
@@ -48,17 +46,15 @@ namespace zCompressionWorker
 
         public async Task DecompressAsync(string source, string destination)
         {
-            using (var dt = _telemetryClient.StartOperation<DependencyTelemetry>("DotNetDecompression"))
+            using (var dt = _telemetryClient.StartOperation<DependencyTelemetry>("OtherDecompression"))
             using (var pm = new PerfMon())
-            using (FileStream originalFileStream = File.OpenRead(source))
-            using (FileStream decompressedFileStream = File.Create(destination))
-            using (GZipStream decompressionStream = new GZipStream(originalFileStream, CompressionMode.Decompress))
             {
-
-                await decompressionStream.CopyToAsync(decompressedFileStream);
+                //TODO: Replace this line of code with the call to your compression SDK
+                await Task.Run(() => File.Copy(source, destination));
 
                 pm.Stop();
-                dt.Telemetry.Type = "DotNetDecompression";
+
+                dt.Telemetry.Type = "OtherDecompression";
                 dt.Telemetry.Properties.Add("source", source);
                 dt.Telemetry.Properties.Add("destination", destination);
                 dt.Telemetry.Properties.Add("run", _config.RunID);

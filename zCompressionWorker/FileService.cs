@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,14 +14,15 @@ namespace zCompressionWorker
         private readonly ILogger<FileService> _logger;
         private RunConfig _config;
         private const string ZIP_EXTENSION = ".gz";
+        private TelemetryClient _telemetryClient;
 
         public FileService(ILogger<FileService> logger,
+            TelemetryClient telemetryClient,
             RunConfig config)
         {
             _logger = logger;
             _config = config;
-
-            _logger.LogInformation($"SourceFilesPath: {_config.SourceFilesPath}");
+            _telemetryClient = telemetryClient;
         }
 
         public IEnumerable<string> ListFiles(string path, string filter = "*.*")
@@ -106,6 +109,21 @@ namespace zCompressionWorker
             // equal to "file2byte" at this point only if the files are
             // the same.
             return ((file1byte - file2byte) == 0);
+        }
+
+        public void LogFileCompare(string source, string dest)
+        {
+            if (!FileCompare(source, dest))
+            {
+                _logger.LogError($"Invalid Compression: {source} -> {dest}");
+
+                var et = new ExceptionTelemetry(new Exception("Invalid DotNet Compression"));
+                et.Properties.Add("source", source);
+                et.Properties.Add("destination", dest);
+                et.Properties.Add("run", _config.RunID);
+
+                _telemetryClient.TrackException(et);
+            }
         }
     }
 

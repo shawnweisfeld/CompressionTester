@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights.Extensibility.EventCounterCollector;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -29,6 +30,7 @@ namespace zCompressionWorker
 
                     services.AddSingleton<FileService>();
                     services.AddSingleton<DotNetCompressionService>();
+                    services.AddSingleton<OtherCompressionService>();
 
                     services.AddHostedService<Worker>();
                 });
