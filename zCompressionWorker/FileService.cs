@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace zCompressionWorker
@@ -63,9 +64,6 @@ namespace zCompressionWorker
 
         public bool FileCompare(string file1, string file2)
         {
-            int file1byte;
-            int file2byte;
-
             if (!File.Exists(file1) || !File.Exists(file2))
                 return false;
 
@@ -79,6 +77,7 @@ namespace zCompressionWorker
             // Open the two files.
             using (var fs1 = new FileStream(file1, FileMode.Open))
             using (var fs2 = new FileStream(file2, FileMode.Open))
+            using (SHA256 mySHA256 = SHA256.Create())
             {
                 // Check the file sizes. If they are not the same, the files
                 // are not the same.
@@ -92,23 +91,11 @@ namespace zCompressionWorker
                     return false;
                 }
 
-                // Read and compare a byte from each file until either a
-                // non-matching set of bytes is found or until the end of
-                // file1 is reached.
-                do
-                {
-                    // Read one byte from each file.
-                    file1byte = fs1.ReadByte();
-                    file2byte = fs2.ReadByte();
-                }
-                while ((file1byte == file2byte) && (file1byte != -1));
+                var file1Hash = mySHA256.ComputeHash(fs1);
+                var file2Hash = mySHA256.ComputeHash(fs2);
 
+                return file1Hash.SequenceEqual(file2Hash);
             }
-
-            // Return the success of the comparison. "file1byte" is
-            // equal to "file2byte" at this point only if the files are
-            // the same.
-            return ((file1byte - file2byte) == 0);
         }
 
         public void LogFileCompare(string source, string dest)
