@@ -20,3 +20,4 @@ It sends telemetry about the performance of the compression to an Azure Applicat
     1. Your code must include reading the source file from disk either compressing or decompressing it and then writing it back to disk
     1. All of your code must be between the line that news up PerfMon and when pm.Stop is called
     1. Use the .NET implementation as an example
+1. Compile and run the app
